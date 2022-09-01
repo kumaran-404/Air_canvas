@@ -1,0 +1,7 @@
+1) Install
+
+    Matplotlib ,numpy ,cv2 , PIL, tensorflow , mediapipe
+
+2) create directory 'model' and run CR.py to get model ready 
+
+3) run Hand.py and draw image in blue rectangle 
