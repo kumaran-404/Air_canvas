@@ -1,25 +1,28 @@
-import joblib
-model = joblib.load("./model.pkl")
-# from keras.models import load_model
+from keras.models import load_model
+model = load_model("./models")
 import numpy as np 
-from PIL import Image
 
 
 
-def predict(image):
-	
+def predict(paintWindow):
+
     #converting image to gray scale
-    grayScale = np.array([])
-    for i in image:
-        for j in i :
-            factor = 0.2989 * j[0] + 0.5870 * j[1] + 0.1140 * j[2]
-            grayScale= np.append(grayScale,factor) 
-    # image  = grayScale.reshape((28,28))
-    # image = cv2.convert("RGB")
+    paintWindow = paintWindow[102:398]
+    a = []
 
-    input = grayScale.reshape(-1,grayScale.shape[0])
+    for i in range(len(paintWindow )):
+        a.append( paintWindow[i][202:398])
+
+    
+#         a= cv2.resize(np.array(a), (28, 28))
+#         #plt.imshow(a, interpolation='nearest')
+#         #predict(a)
+    a = np.array(a)
+    a = a[:,:,0] 
+
+    input = a.reshape(-1,a.shape[0])
     print(input.shape)
-    print("prediction:",np.argmax(model.predict(input)[0]))
+    return np.argmax(model.predict(input)[0])
 
 
-  
+

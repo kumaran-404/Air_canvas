@@ -24,12 +24,23 @@ class HandDetection :
         self.bpoints = [deque(maxlen=1024)]
         print(self.width,self.height)
 
+
+    def setWindow(self):
+        paintWindow = np.zeros((int(self.height),int(self.width),3)) 
+        cv2.rectangle(paintWindow,(200,100),(400,400),(255,0,0),2)
+        #clear rectangle 
+        cv2.rectangle(paintWindow , (25,25) , (150,80),(255,0,0),2)
+        cv2.putText(paintWindow,"clear", (55,55), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255),2,cv2.LINE_AA)
+        #predict rectangle 
+        cv2.rectangle(paintWindow ,(500,25) ,(625,80), (255,0,0),2  )
+        cv2.putText(paintWindow,"predict", (515,55), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255),2,cv2.LINE_AA)
+        return paintWindow
+
     # starts webcam
     def Capture(self):
         text ="No-Write Mode"
         prev = None 
-        paintWindow = np.zeros((int(self.height),int(self.width),3)) 
-        cv2.rectangle(paintWindow,(200,100),(400,400),(255,0,0),2)
+        paintWindow = self.setWindow()
         while(True):
             success,image = self.video.read()
 
@@ -51,9 +62,19 @@ class HandDetection :
 
         
             coordinates = self.getFingerTip()
-            # print(coordinates)
+
+
             if(coordinates):
-                if(self.IsThumbBehindIndex(coordinates)):
+
+                #clear the window 
+                if(self.clearBoard(coordinates)):
+                    paintWindow = self.setWindow()
+                
+                #predict output 
+                self.predict(coordinates,paintWindow)
+
+
+                if(self.IsThumbBehindIndex(coordinates) and self.InsideBoundary(coordinates)):
                     self.isWriteMode = True 
                     text = "Write mode"
                     if(prev==None):
@@ -70,7 +91,6 @@ class HandDetection :
                     text = "No write mode"
                     
                     
-
             txt = cv2.putText(image,text, (20,20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255),2,cv2.LINE_AA)
             
             # cv2.imshow("paint",paintWindow)
@@ -81,21 +101,45 @@ class HandDetection :
             cv2.imshow("Blend Mode",bld)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+      
+#         paintWindow = paintWindow[102:398]
+#         a = []
+# #         plt.imshow(paintWindow, interpolation='nearest')
+# # #	print(paintWindow.shape)
+#         for i in range(len(paintWindow )):
+#             a.append( paintWindow[i][202:398])
         
-        paintWindow = paintWindow[100:400]
-        a = []
-
-#	print(paintWindow.shape)
-        for i in range(len(paintWindow )):
-            a.append( paintWindow[i][100:500])
-            
-        a= cv2.resize(np.array(paintWindow), (28, 28))
-        predict(a)
-        plt.imshow(a, interpolation='nearest')
-        plt.show()
+    
+# #         a= cv2.resize(np.array(a), (28, 28))
+# #         #plt.imshow(a, interpolation='nearest')
+# #         #predict(a)
+#         a = np.array(a)
+#         a = a[:,:,0]
+#         k = im.fromarray(np.array(a)) 
+#         k = k.convert('RGB')
+#         k.save("test.png")
+#         plt.imshow(np.array(a),  interpolation='nearest')
+#         plt.show()
         self.video.release()
 
-   
+    def predict(self,coordinates,PaintWindow):
+        Predict = coordinates[0][0]>=500 and coordinates[0][1]>=25 and coordinates[0][0]<=625  and coordinates[0][1]<=80 
+
+        if(Predict):
+            result = predict(PaintWindow)
+            cv2.putText(PaintWindow,"Prediction is "+str(result), (200,90), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255),2,cv2.LINE_AA)
+
+            
+
+
+    def clearBoard(self,coordinates):
+        print(coordinates)
+        if(coordinates[0][0]>=25 and coordinates[0][1]>=25 and coordinates[0][0]<=150 and coordinates[0][1]<=80 ):
+            return True 
+        return False 
+
+    def InsideBoundary(self,coordinates):
+        return coordinates[0][0]>=200 and coordinates[0][1]>=100 and coordinates[0][0]<=400 and coordinates[0][1]<=400 
 
     def getFingerTip(self):
             coordinates = None 
